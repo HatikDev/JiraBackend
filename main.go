@@ -159,8 +159,8 @@ type TestCasesList struct {
 }
 
 func processOPTIONSRequest(w *http.ResponseWriter, r *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "OPTIONS" {
-		(*w).Header().Set("Access-Control-Allow-Origin", "*")
 		(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE")
 		(*w).Header().Set("Access-Control-Allow-Headers", "X-Requested-With,content-type")
 		(*w).Header().Set("Access-Control-Allow-Credentials", "true")
