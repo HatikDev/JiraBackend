@@ -162,6 +162,10 @@ type TestRunsList struct {
 	Runs []string `json:"runs"`
 }
 
+type LinkData struct {
+	Link string `json:"link"`
+}
+
 func preprocessRequest(w *http.ResponseWriter, r *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "OPTIONS" {
@@ -640,6 +644,16 @@ func getTestRunsList(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResp))
 }
 
+func generateLinkForTesting(w http.ResponseWriter, r *http.Request) {
+	preprocessRequest(&w, r)
+	testURL := &LinkData{
+		Link: "www.testme.com",
+	}
+	jsonResp, err := json.Marshal(*testURL)
+	CheckError(err)
+	fmt.Fprintf(w, string(jsonResp))
+}
+
 func main() {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -659,17 +673,17 @@ func main() {
 	http.HandleFunc("/user/detach", detachUser)             // ok
 	http.HandleFunc("/user/roles/get", getUserProjectRoles) // ok
 	http.HandleFunc("/user/roles/change", sayHello)
-	http.HandleFunc("/projects/users", getProjectUsers)       // ok
-	http.HandleFunc("/users", getUsers)                       // ok
-	http.HandleFunc("/tasks", getProjectTasks)                // ok
-	http.HandleFunc("/projects/testers", getProjectTesters)   // ok
-	http.HandleFunc("/task", getTask)                         // not ok and we should fix attachments
-	http.HandleFunc("/task/change", changeTask)               // what i should with it?
-	http.HandleFunc("/task/create", createTask)               // ok
-	http.HandleFunc("/projects/test/suites", getSuitesList)   // ok
-	http.HandleFunc("/projects/test/cases", getTestCasesList) // ok
-	http.HandleFunc("/projects/test/runs", getTestRunsList)   // ok
-	http.HandleFunc("/projects/test/generate", sayHello)
-	err = http.ListenAndServe(":8081", nil) // устанавливаем порт веб-сервера
+	http.HandleFunc("/projects/users", getProjectUsers)                // ok
+	http.HandleFunc("/users", getUsers)                                // ok
+	http.HandleFunc("/tasks", getProjectTasks)                         // ok
+	http.HandleFunc("/projects/testers", getProjectTesters)            // ok
+	http.HandleFunc("/task", getTask)                                  // not ok and we should fix attachments
+	http.HandleFunc("/task/change", changeTask)                        // what i should with it?
+	http.HandleFunc("/task/create", createTask)                        // ok
+	http.HandleFunc("/projects/test/suites", getSuitesList)            // ok
+	http.HandleFunc("/projects/test/cases", getTestCasesList)          // ok
+	http.HandleFunc("/projects/test/runs", getTestRunsList)            // ok
+	http.HandleFunc("/projects/test/generate", generateLinkForTesting) // ok
+	err = http.ListenAndServe(":8081", nil)                            // устанавливаем порт веб-сервера
 	CheckError(err)
 }
