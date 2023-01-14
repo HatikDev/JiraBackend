@@ -150,6 +150,10 @@ type ProjectTaskData struct {
 	TaskID    int `json:"taskId"`
 }
 
+type SuitesList struct {
+	Suits []string `json:"suits"`
+}
+
 func getUserIDByLogin(login string) int {
 	query := fmt.Sprintf(`select id from users where users.login = '%s'`, login)
 	rows, err := db.Query(query)
@@ -551,7 +555,15 @@ func changeTask(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, changeTaskInfo.ProjectID, asigneeID, changeTaskInfo.Name,
 		changeTaskInfo.Description, changeTaskInfo.Status, changeTaskInfo.TaskID)
 	CheckError(err)
+}
 
+func getSuitesList(w http.ResponseWriter, r *http.Request) {
+	suitesList := &SuitesList{
+		Suits: []string{"suit1", "suit2", "suit3"},
+	}
+	jsonResp, err := json.Marshal(*suitesList)
+	CheckError(err)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func main() {
@@ -580,7 +592,7 @@ func main() {
 	http.HandleFunc("/task", getTask)                       // not ok and we should fix attachments
 	http.HandleFunc("/task/change", changeTask)             // what i should with it?
 	http.HandleFunc("/task/create", createTask)             // ok
-	http.HandleFunc("/projects/test/suites", sayHello)
+	http.HandleFunc("/projects/test/suites", getSuitesList) // ok
 	http.HandleFunc("/projects/test/cases", sayHello)
 	http.HandleFunc("/projects/test/runs", sayHello)
 	http.HandleFunc("/projects/test/generate", sayHello)
