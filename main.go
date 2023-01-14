@@ -205,7 +205,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(response)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(jsonResp))
 }
 
@@ -241,7 +240,6 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 			jsonResp, err = json.Marshal(*response)
 			CheckError(err)
 		}
-		// w.Header().Set("Access-Control-Allow-Origin", "*")
 		fmt.Fprintf(w, string(jsonResp))
 		break
 	}
@@ -260,7 +258,6 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 	maxUserID++
 	w.WriteHeader(201)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func attachUser(w http.ResponseWriter, r *http.Request) {
@@ -276,7 +273,6 @@ func attachUser(w http.ResponseWriter, r *http.Request) {
 	query := `INSERT INTO "project_users" ("user_id", "project_id", "role_name") VALUES ($1, $2, $3)`
 	_, err = db.Exec(query, userId, userProjectData.ProjectID, "Администратор")
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func detachUser(w http.ResponseWriter, r *http.Request) {
@@ -292,7 +288,6 @@ func detachUser(w http.ResponseWriter, r *http.Request) {
 	query := `delete from "project_users" where user_id = $1 and project_id = $2`
 	_, err = db.Exec(query, userId, userProjectData.ProjectID)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func createProject(w http.ResponseWriter, r *http.Request) {
@@ -310,7 +305,6 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 
 	w.WriteHeader(201)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func changeProject(w http.ResponseWriter, r *http.Request) {
@@ -327,7 +321,6 @@ func changeProject(w http.ResponseWriter, r *http.Request) {
 	where id = $5`
 	_, err = db.Query(query, managerID, projectData.Name, projectData.Description, projectData.IsArchive, projectData.ID)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func getProjectUsers(w http.ResponseWriter, r *http.Request) {
@@ -354,7 +347,6 @@ func getProjectUsers(w http.ResponseWriter, r *http.Request) {
 	jsonResp, err := json.Marshal(users)
 	CheckError(err)
 	fmt.Fprintf(w, string(jsonResp))
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func getUserProjectRoles(w http.ResponseWriter, r *http.Request) {
@@ -379,8 +371,6 @@ func getUserProjectRoles(w http.ResponseWriter, r *http.Request) {
 	jsonResp, err := json.Marshal(userRoles)
 	CheckError(err)
 	fmt.Fprintf(w, string(jsonResp))
-
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func getUserProjects(w http.ResponseWriter, r *http.Request) {
@@ -423,7 +413,6 @@ func getUserProjects(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(dataList)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(jsonResp))
 }
 
@@ -466,7 +455,6 @@ func getProjectTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(taskList)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	fmt.Fprintf(w, string(jsonResp))
 }
@@ -496,7 +484,6 @@ func getProjectTesters(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(response)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(jsonResp))
 }
 
@@ -597,8 +584,6 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	maxTaskID++
-
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func changeTask(w http.ResponseWriter, r *http.Request) {
@@ -616,7 +601,6 @@ func changeTask(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, changeTaskInfo.ProjectID, asigneeID, changeTaskInfo.Name,
 		changeTaskInfo.Description, changeTaskInfo.Status, changeTaskInfo.TaskID)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func getSuitesList(w http.ResponseWriter, r *http.Request) {
@@ -627,7 +611,6 @@ func getSuitesList(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(*suitesList)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(jsonResp))
 }
 
@@ -638,7 +621,6 @@ func getTestCasesList(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(*testCasesList)
 	CheckError(err)
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(jsonResp))
 }
 
