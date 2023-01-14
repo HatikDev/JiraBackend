@@ -49,6 +49,21 @@ type UserData struct {
 	Password string `json:"password"`
 }
 
+type LoginData struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type SuccussfulAuthData struct {
+	Status bool `json:"status"`
+	IsRoot bool `json:"isRoot"`
+}
+
+type UnsuccessfuleAuthData struct {
+	Status       bool   `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
+}
+
 type UserProjectData struct {
 	ProjectID int    `json:"projectId"`
 	UserLogin string `json:"userLogin"`
@@ -171,6 +186,41 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	jsonResp, err := json.Marshal(response)
 	CheckError(err)
 	fmt.Fprintf(w, string(jsonResp))
+}
+
+func loginUser(w http.ResponseWriter, r *http.Request) {
+	body := GetBody(r)
+	var loginData LoginData
+	err := json.Unmarshal(body, &loginData)
+	CheckError(err)
+
+	query := fmt.Sprintf(`select password from users where login = '%s'`, loginData.Username)
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		var password string
+
+		rows.Scan(&password)
+		var jsonResp []byte
+		if password == loginData.Password {
+			var response = &SuccussfulAuthData{
+				Status: true,
+				IsRoot: false,
+			}
+			jsonResp, err = json.Marshal(*response)
+			CheckError(err)
+		} else {
+			var response = &UnsuccessfuleAuthData{
+				Status:       false,
+				ErrorMessage: "Неправильный пароль",
+			}
+			jsonResp, err = json.Marshal(*response)
+			CheckError(err)
+		}
+		fmt.Fprintf(w, string(jsonResp))
+		break
+	}
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
@@ -514,7 +564,7 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", sayHello)
-	http.HandleFunc("/user/login", sayHello)
+	http.HandleFunc("/user/login", loginUser)               // ok
 	http.HandleFunc("/user/register", registerUser)         // ok
 	http.HandleFunc("/projects", getUserProjects)           // ok
 	http.HandleFunc("/projects/create", createProject)      // ok
