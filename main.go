@@ -220,19 +220,21 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(body, &loginData)
 	CheckError(err)
 
-	query := fmt.Sprintf(`select password from users where login = '%s'`, loginData.Username)
+	query := fmt.Sprintf(`select password, is_root from users where login = '%s'`, loginData.Username)
 	rows, err := db.Query(query)
 	CheckError(err)
 
 	for rows.Next() {
 		var password string
+		var isRoot bool
 
-		rows.Scan(&password)
+		err = rows.Scan(&password, &isRoot)
+		CheckError(err)
 		var jsonResp []byte
 		if password == loginData.Password {
 			var response = &SuccussfulAuthData{
 				Status: true,
-				IsRoot: false,
+				IsRoot: isRoot,
 			}
 			jsonResp, err = json.Marshal(*response)
 			CheckError(err)
