@@ -133,6 +133,12 @@ type ChangeTaskInfo struct {
 	AttachmentsNew []string `json:"attachmentsNew"`
 }
 
+type ChangeRoleInfo struct {
+	ProjectID int      `json:"projectId"`
+	UserLogin string   `json:"userLogin"`
+	Roles     []string `json:"roles"`
+}
+
 type TaskInfo struct {
 	ID                   int          `json:"id"`
 	Type                 string       `json:"type"`
@@ -596,6 +602,36 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	maxTaskID++
 }
 
+func hasUserSuchRole(userID int, projectID int, role string) bool {
+	query := fmt.Sprintf(`select * from project_users where project_id = %d and user_id = %d and role_name = '%s'`,
+		projectID, userID, role)
+	rows, err := db.Query(query)
+	CheckError(err)
+	for rows.Next() {
+		return true
+	}
+	return false
+}
+
+func changeUserRoles(w http.ResponseWriter, r *http.Request) {
+	preprocessRequest(&w, r)
+	body := GetBody(r)
+	var changeRoleInfo ChangeRoleInfo
+	err := json.Unmarshal(body, &changeRoleInfo)
+	CheckError(err)
+
+	userID := getUserIDByLogin(changeRoleInfo.UserLogin)
+	for _, role := range changeRoleInfo.Roles {
+		if hasUserSuchRole(userID, changeRoleInfo.ProjectID, role) {
+			continue
+		}
+
+		query := `insert into project_users(user_id, project_id, role_name) values($1, $2, $3)`
+		_, err = db.Exec(query, userID, changeRoleInfo.ProjectID, role)
+		CheckError(err)
+	}
+}
+
 func changeTask(w http.ResponseWriter, r *http.Request) {
 	preprocessRequest(&w, r)
 
@@ -664,15 +700,15 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", sayHello)
-	http.HandleFunc("/user/login", loginUser)               // ok
-	http.HandleFunc("/user/register", registerUser)         // ok
-	http.HandleFunc("/projects", getUserProjects)           // ok
-	http.HandleFunc("/projects/create", createProject)      // ok
-	http.HandleFunc("/projects/change", changeProject)      // ok
-	http.HandleFunc("/user/attach", attachUser)             // ok
-	http.HandleFunc("/user/detach", detachUser)             // ok
-	http.HandleFunc("/user/roles/get", getUserProjectRoles) // ok
-	http.HandleFunc("/user/roles/change", sayHello)
+	http.HandleFunc("/user/login", loginUser)                          // ok
+	http.HandleFunc("/user/register", registerUser)                    // ok
+	http.HandleFunc("/projects", getUserProjects)                      // ok
+	http.HandleFunc("/projects/create", createProject)                 // ok
+	http.HandleFunc("/projects/change", changeProject)                 // ok
+	http.HandleFunc("/user/attach", attachUser)                        // ok
+	http.HandleFunc("/user/detach", detachUser)                        // ok
+	http.HandleFunc("/user/roles/get", getUserProjectRoles)            // ok
+	http.HandleFunc("/user/roles/change", changeUserRoles)             // ok
 	http.HandleFunc("/projects/users", getProjectUsers)                // ok
 	http.HandleFunc("/users", getUsers)                                // ok
 	http.HandleFunc("/tasks", getProjectTasks)                         // ok
