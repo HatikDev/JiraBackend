@@ -179,7 +179,7 @@ func initMaxUserID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxUserID)
-		CheckError(err)
+		return
 	}
 	maxUserID++
 }
@@ -191,7 +191,7 @@ func initMaxProjectID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxProjectID)
-		CheckError(err)
+		return
 	}
 	maxProjectID++
 }
@@ -203,7 +203,7 @@ func initMaxTaskID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxTaskID)
-		CheckError(err)
+		return
 	}
 	maxTaskID++
 }
