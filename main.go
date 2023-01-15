@@ -633,7 +633,7 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 
 		// get next transitions
 
-		query = fmt.Sprintf(`select next from transitions where previous = %s`, status)
+		query = fmt.Sprintf(`select next from transitions where previous = '%s'`, status)
 		rows2, err := db.Query(query)
 		CheckError(err)
 
@@ -647,22 +647,24 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 		}
 		taskInfo.AvailableTransitions = nextTransitions
 
-		// w.Header().Set("Access-Control-Allow-Origin", "*")
-
 		// get file attachments
-		// query = fmt.Sprintf(`select file_path from attachments where project_id = %s and task_id = %s`, projectTaskData.ProjectID, projectTaskData.TaskID)
-		// rows2, err = db.Query(query)
-		// CheckError(err)
+		query = fmt.Sprintf(`select file_path from attachments where project_id = %d and task_id = %d`, projectTaskData.ProjectID, projectTaskData.TaskID)
+		rows2, err = db.Query(query)
+		CheckError(err)
 
-		// var attachments []string
-		// for rows2.Next() {
-		// 	var file string
-		// 	err = rows2.Scan(&file)
-		// 	CheckError(err)
+		var attachments []Attachment = make([]Attachment, 0, 1)
+		for rows2.Next() {
+			var filename string
+			err = rows2.Scan(&filename)
+			CheckError(err)
 
-		// 	attachments = append(attachments, file)
-		// }
-		// taskInfo.Attachments = attachments
+			attachments = append(attachments, Attachment{filename, "www.link.com"})
+		}
+		taskInfo.Attachments = attachments
+
+		jsonResp, err := json.Marshal(taskInfo)
+		CheckError(err)
+		fmt.Fprint(w, string(jsonResp))
 	}
 }
 
@@ -695,6 +697,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 
 	result := &ResultData{Status: true}
 	jsonResp, err := json.Marshal(result)
+	CheckError(err)
 	fmt.Fprintf(w, string(jsonResp))
 }
 
