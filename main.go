@@ -390,7 +390,7 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	managerID := getUserIDByLogin(projectData.Manager)
 
 	query := `insert into projects (id, manager_id, name, description, is_archive, creation_date) values($1, $2, $3, $4, $5, $6)`
-	_, err = db.Exec(query, maxProjectID, managerID, projectData.Name, projectData.Description, projectData.IsArchive, "2022-01-16")
+	_, err = db.Exec(query, maxProjectID, managerID, projectData.Name, projectData.Description, projectData.IsArchive, "2023-01-16")
 	CheckError(err)
 
 	// add user to the project with manager and user roles
@@ -704,7 +704,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	// create attachments
 	query = `insert into attachments (project_id, task_id, file_path, attachment_date) values ($1, $2, $3, $4)`
 	for _, attachment := range createTaskInfo.Attachments {
-		_, err = db.Exec(query, createTaskInfo.ProjectID, maxTaskID, attachment, "2022-01-16")
+		_, err = db.Exec(query, createTaskInfo.ProjectID, maxTaskID, attachment, "2023-01-16")
 		CheckError(err)
 	}
 
@@ -901,6 +901,10 @@ func generateReport(w http.ResponseWriter, r *http.Request) {
 	query = `insert into tasks (project_id, task_id, author_id, asignee_id, status_name, name, description)
 	values ($1, $2, $3, $4, $5, $6, $7)`
 	_, err = db.Exec(query, generateReportData.ProjectID, maxTaskID, userID, userID, status, name, description)
+	CheckError(err)
+
+	query = `insert into attachments (project_id, task_id, file_path, attachment_date) values ($1, $2, $3, '2023-01-16')`
+	_, err = db.Exec(query, generateReportData.ProjectID, maxTaskID, generateReportData.Filename)
 	CheckError(err)
 
 	maxTaskID++
