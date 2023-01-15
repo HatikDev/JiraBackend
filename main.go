@@ -324,6 +324,9 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 	maxUserID++
 	w.WriteHeader(201)
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func attachUser(w http.ResponseWriter, r *http.Request) {
@@ -409,6 +412,10 @@ func changeProject(w http.ResponseWriter, r *http.Request) {
 	where id = $5`
 	_, err = db.Query(query, managerID, projectData.Name, projectData.Description, projectData.IsArchive, projectData.ID)
 	CheckError(err)
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func getProjectUsers(w http.ResponseWriter, r *http.Request) {
@@ -557,7 +564,6 @@ func getProjectTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResp, err := json.Marshal(taskList)
 	CheckError(err)
-
 	fmt.Fprintf(w, string(jsonResp))
 }
 
@@ -686,6 +692,10 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	maxTaskID++
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func hasUserSuchRole(userID int, projectID int, role string) bool {
@@ -716,6 +726,10 @@ func changeUserRoles(w http.ResponseWriter, r *http.Request) {
 		_, err = db.Exec(query, userID, changeRoleInfo.ProjectID, role)
 		CheckError(err)
 	}
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func changeTask(w http.ResponseWriter, r *http.Request) {
@@ -733,6 +747,10 @@ func changeTask(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, changeTaskInfo.ProjectID, asigneeID, changeTaskInfo.Name,
 		changeTaskInfo.Description, changeTaskInfo.Status, changeTaskInfo.TaskID)
 	CheckError(err)
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func getSuitesList(w http.ResponseWriter, r *http.Request) {
