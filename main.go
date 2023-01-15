@@ -726,12 +726,18 @@ func changeUserRoles(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 
 	userID := getUserIDByLogin(changeRoleInfo.UserLogin)
+
+	// delete all user role in the project
+	query := `delete from project_users where user_id = $1 and project_id = $2`
+	_, err = db.Exec(query, userID, changeRoleInfo.ProjectID)
+	CheckError(err)
+
 	for _, role := range changeRoleInfo.Roles {
 		if hasUserSuchRole(userID, changeRoleInfo.ProjectID, role) {
 			continue
 		}
 
-		query := `insert into project_users(user_id, project_id, role_name) values($1, $2, $3)`
+		query = `insert into project_users(user_id, project_id, role_name) values($1, $2, $3)`
 		_, err = db.Exec(query, userID, changeRoleInfo.ProjectID, role)
 		CheckError(err)
 	}
@@ -893,7 +899,7 @@ func main() {
 	http.HandleFunc("/projects/test/cases", getTestCasesList)          // ok
 	http.HandleFunc("/projects/test/runs", getTestRunsList)            // ok
 	http.HandleFunc("/projects/test/generate", generateLinkForTesting) // ok
-	http.HandleFunc("/task/transit", transitTask)
-	err = http.ListenAndServe(":8081", nil) // устанавливаем порт веб-сервера
+	http.HandleFunc("/task/transit", transitTask)                      // ok
+	err = http.ListenAndServe(":8081", nil)                            // устанавливаем порт веб-сервера
 	CheckError(err)
 }
