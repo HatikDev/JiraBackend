@@ -119,14 +119,14 @@ type CreateTaskInfo struct {
 }
 
 type ChangeTaskInfo struct {
-	TaskID         int      `json:"taskId"`
-	ProjectID      int      `json:"projectId"`
-	Asignee        string   `json:"asignee"`
-	Name           string   `json:"name"`
-	Status         string   `json:"status"`
-	Description    string   `json:"description"`
-	AttachmentsOld []string `json:"attachmentsOld"`
-	AttachmentsNew []string `json:"attachmentsNew"`
+	TaskID         int          `json:"taskId"`
+	ProjectID      int          `json:"projectId"`
+	Asignee        string       `json:"asignee"`
+	Name           string       `json:"name"`
+	Status         string       `json:"status"`
+	Description    string       `json:"description"`
+	AttachmentsOld []Attachment `json:"attachmentsOld"`
+	AttachmentsNew []string     `json:"attachmentsNew"`
 }
 
 type ChangeRoleInfo struct {
