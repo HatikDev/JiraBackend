@@ -179,9 +179,9 @@ func initMaxUserID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxUserID)
+		maxUserID++
 		return
 	}
-	maxUserID++
 }
 
 func initMaxProjectID() {
@@ -191,9 +191,9 @@ func initMaxProjectID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxProjectID)
+		maxProjectID++
 		return
 	}
-	maxProjectID++
 }
 
 func initMaxTaskID() {
@@ -203,9 +203,9 @@ func initMaxTaskID() {
 
 	for rows.Next() {
 		err = rows.Scan(&maxTaskID)
+		maxTaskID++
 		return
 	}
-	maxTaskID++
 }
 
 func preprocessRequest(w *http.ResponseWriter, r *http.Request) {
