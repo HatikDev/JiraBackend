@@ -308,6 +308,10 @@ func detachUser(w http.ResponseWriter, r *http.Request) {
 	query := `delete from "project_users" where user_id = $1 and project_id = $2`
 	_, err = db.Exec(query, userId, userProjectData.ProjectID)
 	CheckError(err)
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func createProject(w http.ResponseWriter, r *http.Request) {
