@@ -287,8 +287,12 @@ func attachUser(w http.ResponseWriter, r *http.Request) {
 	userId := getUserIDByLogin(userProjectData.UserLogin)
 
 	query := `INSERT INTO "project_users" ("user_id", "project_id", "role_name") VALUES ($1, $2, $3)`
-	_, err = db.Exec(query, userId, userProjectData.ProjectID, "Администратор")
+	_, err = db.Exec(query, userId, userProjectData.ProjectID, "Пользователь")
 	CheckError(err)
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func detachUser(w http.ResponseWriter, r *http.Request) {
