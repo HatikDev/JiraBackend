@@ -172,6 +172,42 @@ type LinkData struct {
 	Link string `json:"link"`
 }
 
+func initMaxUserID() {
+	query := `select max(id) from users`
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		err = rows.Scan(&maxUserID)
+		CheckError(err)
+	}
+	maxUserID++
+}
+
+func initMaxProjectID() {
+	query := `select max(id) from projects`
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		err = rows.Scan(&maxProjectID)
+		CheckError(err)
+	}
+	maxProjectID++
+}
+
+func initMaxTaskID() {
+	query := `select max(task_id) from tasks`
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		err = rows.Scan(&maxTaskID)
+		CheckError(err)
+	}
+	maxTaskID++
+}
+
 func preprocessRequest(w *http.ResponseWriter, r *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "OPTIONS" {
@@ -195,6 +231,20 @@ func getUserIDByLogin(login string) int {
 		return id
 	}
 	return -1
+}
+
+func isUserRoot(userID int) bool {
+	query := fmt.Sprintf(`select is_root from users where id = %d`, userID)
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		var isRoot bool
+
+		err = rows.Scan(&isRoot)
+		return isRoot
+	}
+	return false
 }
 
 func sayHello(w http.ResponseWriter, r *http.Request) {
@@ -328,6 +378,8 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, maxProjectID, managerID, projectData.Name, projectData.Description, projectData.IsArchive, "2017-04-03")
 	CheckError(err)
 
+	maxProjectID++
+
 	result := &ResultData{Status: true}
 	jsonResp, err := json.Marshal(result)
 	CheckError(err)
@@ -410,11 +462,22 @@ func getUserProjects(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 
 	userID := getUserIDByLogin(userLoginData.UserLogin)
-	query := fmt.Sprintf(`select projects.id, users.login, projects.name, projects.description, creation_date, is_archive 
-	from project_users 
-	inner join projects on project_users.project_id = projects.id 
-	inner join users on projects.manager_id = users.id
-	where project_users.user_id = %d`, userID)
+
+	var query string
+	if isUserRoot(userID) {
+		query = `select distinct projects.id, users.login, projects.name,
+		projects.description, creation_date, is_archive 
+		from projects
+		inner join users on projects.manager_id = users.id`
+	} else {
+		query = fmt.Sprintf(`select distinct projects.id, users.login, projects.name,
+		projects.description, creation_date, is_archive 
+		from project_users 
+		inner join projects on project_users.project_id = projects.id 
+		inner join users on projects.manager_id = users.id
+		where project_users.user_id = %d`, userID)
+	}
+
 	rows, err := db.Query(query)
 	CheckError(err)
 
@@ -438,6 +501,9 @@ func getUserProjects(w http.ResponseWriter, r *http.Request) {
 			CreationDate: createdDate,
 		}
 		dataList.Projects = append(dataList.Projects, *project)
+	}
+	if len(dataList.Projects) == 0 {
+		dataList.Projects = make([]ProjectData, 0, 1)
 	}
 	jsonResp, err := json.Marshal(dataList)
 	CheckError(err)
@@ -710,6 +776,10 @@ func main() {
 	CheckError(err)
 
 	defer db.Close()
+
+	initMaxUserID()
+	initMaxProjectID()
+	initMaxTaskID()
 
 	http.HandleFunc("/", sayHello)
 	http.HandleFunc("/user/login", loginUser)                          // ok
