@@ -178,6 +178,12 @@ type TaskTransitData struct {
 	Status    string `json:"status"`
 }
 
+type GenerateReportData struct {
+	ProjectID int    `json:"projectId"`
+	Filename  string `json:"fileName"`
+	Filelink  string `json:"fileLink"`
+}
+
 func initMaxUserID() {
 	query := `select max(id) from users`
 	rows, err := db.Query(query)
@@ -868,6 +874,43 @@ func transitTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResp))
 }
 
+func generateReport(w http.ResponseWriter, r *http.Request) {
+	preprocessRequest(&w, r)
+
+	body := GetBody(r)
+	var generateReportData GenerateReportData
+	err := json.Unmarshal(body, &generateReportData)
+	CheckError(err)
+
+	var name = "Анализ отчётов"
+	var description = "Анализ отчёта о проведенном тестировании"
+	var status = "Новая задача"
+	var userID int
+
+	query := fmt.Sprintf(`select user_id from project_users where project_id = '%d' and
+	(role_name = 'Руководитель проекта' or role_name = 'Руководитель тестирования')`, generateReportData.ProjectID)
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		err = rows.Scan(&userID)
+		CheckError(err)
+		break
+	}
+
+	query = `insert into tasks (project_id, task_id, author_id, asignee_id, status_name, name, description)
+	values ($1, $2, $3, $4, $5, $6, $7)`
+	_, err = db.Exec(query, generateReportData.ProjectID, maxTaskID, userID, userID, status, name, description)
+	CheckError(err)
+
+	maxTaskID++
+
+	w.WriteHeader(201)
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	fmt.Fprintf(w, string(jsonResp))
+}
+
 func main() {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -903,6 +946,7 @@ func main() {
 	http.HandleFunc("/projects/test/runs", getTestRunsList)            // ok
 	http.HandleFunc("/projects/test/generate", generateLinkForTesting) // ok
 	http.HandleFunc("/task/transit", transitTask)                      // ok
+	http.HandleFunc("/task/analysis", generateReport)                  // ok
 	err = http.ListenAndServe(":8081", nil)                            // устанавливаем порт веб-сервера
 	CheckError(err)
 }
