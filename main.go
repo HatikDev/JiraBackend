@@ -172,6 +172,12 @@ type LinkData struct {
 	Link string `json:"link"`
 }
 
+type TaskTransitData struct {
+	ProjectID int    `json:"projectId"`
+	TaskID    int    `json:"taskId"`
+	Status    string `json:"status"`
+}
+
 func initMaxUserID() {
 	query := `select max(id) from users`
 	rows, err := db.Query(query)
@@ -797,6 +803,62 @@ func generateLinkForTesting(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResp))
 }
 
+func transitTask(w http.ResponseWriter, r *http.Request) {
+	preprocessRequest(&w, r)
+
+	body := GetBody(r)
+	var taskTransitData TaskTransitData
+	err := json.Unmarshal(body, &taskTransitData)
+	CheckError(err)
+
+	// we should check if we can change task status
+	// get current status
+	query := fmt.Sprintf(`select status_name from tasks where project_id = %d and task_id = %d`,
+		taskTransitData.ProjectID, taskTransitData.TaskID)
+	rows, err := db.Query(query)
+	var currentStatus string
+	for rows.Next() {
+		err = rows.Scan(&currentStatus)
+		CheckError(err)
+	}
+
+	// check if we can change status
+
+	query = fmt.Sprintf(`select next from transitions where previous = '%s'`, currentStatus)
+	rows, err = db.Query(query)
+	CheckError(err)
+	var count int
+	for rows.Next() {
+		var status string
+		err = rows.Scan(&status)
+		CheckError(err)
+		if status == taskTransitData.Status {
+			count++
+			break
+		}
+	}
+	if count == 0 {
+		result := &ResultData{Status: false}
+		jsonResp, err := json.Marshal(result)
+		CheckError(err)
+		fmt.Fprintf(w, string(jsonResp))
+		return
+	}
+
+	// change task status
+
+	query = `update tasks
+	set status_name = $1
+	where project_id = $2 and task_id = $3`
+	_, err = db.Exec(query, taskTransitData.Status, taskTransitData.ProjectID, taskTransitData.TaskID)
+	CheckError(err)
+
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	CheckError(err)
+	fmt.Fprintf(w, string(jsonResp))
+}
+
 func main() {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -824,13 +886,14 @@ func main() {
 	http.HandleFunc("/users", getUsers)                                // ok
 	http.HandleFunc("/tasks", getProjectTasks)                         // ok
 	http.HandleFunc("/projects/testers", getProjectTesters)            // ok
-	http.HandleFunc("/task", getTask)                                  // not ok and we should fix attachments
+	http.HandleFunc("/task", getTask)                                  // ok
 	http.HandleFunc("/task/change", changeTask)                        // what i should with it?
 	http.HandleFunc("/task/create", createTask)                        // ok
 	http.HandleFunc("/projects/test/suites", getSuitesList)            // ok
 	http.HandleFunc("/projects/test/cases", getTestCasesList)          // ok
 	http.HandleFunc("/projects/test/runs", getTestRunsList)            // ok
 	http.HandleFunc("/projects/test/generate", generateLinkForTesting) // ok
-	err = http.ListenAndServe(":8081", nil)                            // устанавливаем порт веб-сервера
+	http.HandleFunc("/task/transit", transitTask)
+	err = http.ListenAndServe(":8081", nil) // устанавливаем порт веб-сервера
 	CheckError(err)
 }
