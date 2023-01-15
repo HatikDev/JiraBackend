@@ -378,6 +378,14 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, maxProjectID, managerID, projectData.Name, projectData.Description, projectData.IsArchive, "2017-04-03")
 	CheckError(err)
 
+	// add user to the project with manager and user roles
+
+	query = `INSERT INTO "project_users" ("user_id", "project_id", "role_name") VALUES ($1, $2, $3)`
+	_, err = db.Exec(query, managerID, maxProjectID, "Руководитель проекта")
+	CheckError(err)
+	_, err = db.Exec(query, managerID, maxProjectID, "Пользователь")
+	CheckError(err)
+
 	maxProjectID++
 
 	result := &ResultData{Status: true}
