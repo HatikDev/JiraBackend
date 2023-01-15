@@ -36,10 +36,6 @@ func GetBody(r *http.Request) []byte {
 	return b
 }
 
-// func sayHello(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprintf(w, "Hello, Doroshin")
-// }
-
 type Users struct {
 	UsersList []string `json:"users"`
 }
@@ -103,7 +99,7 @@ type Task struct {
 }
 
 type TaskList struct {
-	Tasks []Task `json:tasks`
+	Tasks []Task `json:"tasks"`
 }
 
 type Attachment struct {
@@ -149,6 +145,10 @@ type TaskInfo struct {
 	Description          string       `json:"description"`
 	AvailableTransitions []string     `json:"availableTransitions"`
 	Attachments          []Attachment `json:"attachments"`
+}
+
+type ResultData struct {
+	Status bool `json:"status"`
 }
 
 type ProjectTaskData struct {
@@ -320,7 +320,11 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, maxProjectID, managerID, projectData.Name, projectData.Description, projectData.IsArchive, "2017-04-03")
 	CheckError(err)
 
+	result := &ResultData{Status: true}
+	jsonResp, err := json.Marshal(result)
+	CheckError(err)
 	w.WriteHeader(201)
+	fmt.Fprintf(w, string(jsonResp))
 }
 
 func changeProject(w http.ResponseWriter, r *http.Request) {
