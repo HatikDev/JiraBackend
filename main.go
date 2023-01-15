@@ -426,7 +426,7 @@ func getProjectUsers(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(body, &projectIDData)
 	CheckError(err)
 
-	query := fmt.Sprintf(`select users.login from project_users 
+	query := fmt.Sprintf(`select distinct users.login from project_users 
 	inner join users on users.id = project_users.user_id
 	where project_users.project_id = '%d'`, projectIDData.ProjectID)
 	rows, err := db.Query(query)
