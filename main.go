@@ -684,6 +684,9 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 
 	authorID := getUserIDByLogin(createTaskInfo.Author)
 	asigneeID := getUserIDByLogin(createTaskInfo.Asignee)
+	if createTaskInfo.IsTesting {
+		createTaskInfo.Description += " www.testme.com"
+	}
 
 	// create task
 
@@ -893,7 +896,7 @@ func main() {
 	http.HandleFunc("/tasks", getProjectTasks)                         // ok
 	http.HandleFunc("/projects/testers", getProjectTesters)            // ok
 	http.HandleFunc("/task", getTask)                                  // ok
-	http.HandleFunc("/task/change", changeTask)                        // what i should with it?
+	http.HandleFunc("/task/change", changeTask)                        // ok
 	http.HandleFunc("/task/create", createTask)                        // ok
 	http.HandleFunc("/projects/test/suites", getSuitesList)            // ok
 	http.HandleFunc("/projects/test/cases", getTestCasesList)          // ok
