@@ -245,6 +245,21 @@ func getUserIDByLogin(login string) int {
 	return -1
 }
 
+func getLoginByUserID(userID int) string {
+	query := fmt.Sprintf(`select login from users where id = %d`, userID)
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		var login string
+
+		err = rows.Scan(&login)
+		CheckError(err)
+		return login
+	}
+	return ""
+}
+
 func isUserRoot(userID int) bool {
 	query := fmt.Sprintf(`select is_root from users where id = %d`, userID)
 	rows, err := db.Query(query)
@@ -915,6 +930,45 @@ func generateReport(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResp))
 }
 
+func getProjectData(w http.ResponseWriter, r *http.Request) {
+	preprocessRequest(&w, r)
+
+	body := GetBody(r)
+	var projectIDData ProjectIDData
+	err := json.Unmarshal(body, &projectIDData)
+	CheckError(err)
+
+	query := fmt.Sprintf(`select id, manager_id, name, description, is_archive, creation_date
+							from projects where id = %d`, projectIDData.ProjectID)
+	rows, err := db.Query(query)
+	CheckError(err)
+
+	for rows.Next() {
+		var id int
+		var managerID int
+		var name string
+		var description string
+		var isArchive bool
+		var creationDate string
+
+		err = rows.Scan(&id, &managerID, &name, &description, &isArchive, &creationDate)
+		CheckError(err)
+
+		managerLogin := getLoginByUserID(managerID)
+		projectData := &ProjectData{
+			ID:           id,
+			Manager:      managerLogin,
+			Name:         name,
+			Description:  description,
+			IsArchive:    isArchive,
+			CreationDate: creationDate,
+		}
+		jsonResp, err := json.Marshal(projectData)
+		CheckError(err)
+		fmt.Fprintf(w, string(jsonResp))
+	}
+}
+
 func main() {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -951,6 +1005,7 @@ func main() {
 	http.HandleFunc("/projects/test/generate", generateLinkForTesting) // ok
 	http.HandleFunc("/task/transit", transitTask)                      // ok
 	http.HandleFunc("/task/analysis", generateReport)                  // ok
-	err = http.ListenAndServe(":8081", nil)                            // устанавливаем порт веб-сервера
+	http.HandleFunc("/project", getProjectData)
+	err = http.ListenAndServe(":8081", nil) // устанавливаем порт веб-сервера
 	CheckError(err)
 }
